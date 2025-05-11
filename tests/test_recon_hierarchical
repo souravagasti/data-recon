@@ -1,0 +1,35 @@
+import json
+import sys
+import os
+
+# Ensure project root is in sys.path so "src" is importable
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from src.recon import Recon
+from src.recon_utils import validate_settings
+
+def run_test():
+    path_name = "/Users/souravagasti/Downloads/recon-project"
+    settings1_path = f"{path_name}/input/settings1.json"
+    settings2_path = f"{path_name}/input/settings2.json"
+
+    with open(settings1_path) as f:
+        settings1 = json.load(f)
+    with open(settings2_path) as f:
+        settings2 = json.load(f)
+
+    # After loading the JSON configs
+    validate_settings(settings1, ["file_path", "source_type"], "source1")
+    validate_settings(settings2, ["file_path", "source_type"], "source2")
+
+    source_type_1 = "local_csv"
+    source_type_2 = "local_csv"
+
+    recon = Recon(path_name, source_type_1, settings1, source_type_2, settings2)
+    recon.setup()
+    recon.write_recon_no_pk_hierarchical_data_results()
+
+    print("Hierarchical recon test completed. Output is written to the results folder.")
+
+if __name__ == "__main__":
+    run_test()

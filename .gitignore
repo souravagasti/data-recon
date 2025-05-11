@@ -1,0 +1,8 @@
+databricks.yml
+input/
+.databricks
+run_output/
+templates/
+testing.ipynb
+.venv/
+.vscode/
