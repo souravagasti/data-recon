@@ -62,6 +62,8 @@ class Recon:
             self.write_recon_with_soft_pk_and_cleanup_results()
         elif recon_type == "hierarchical_data":
             self.write_recon_hierarchical_data_results()
+        logging.info("Dropping temporary tables")
+        drop_temp_tables(args.run_id)
         logging.info(f"Recon completed and results written to {self.file_write_path}")
 
     def write_recon_with_pk_results(self):
@@ -168,40 +170,28 @@ class Recon:
 
     def write_recon_hierarchical_data_results(self):
         """Performs recon on hierarchical data using fuzzy logic."""
-        print(111111)
         # Step 1: Clean and deduplicate both tables
         for source in ["source1", "source2"]:
             dedup_table(source, self.info[f'pk_{source}'])
-            print(121212)
             cleanse_columns(source, self.info[f'cols_{source}'])
-            print(13131)
             add_hash_column(source, self.info[f'pk_{source}'], "pk_hash")
-            print(141414)
             if len(self.info[f'non_pk_{source}']) > 0:
                 add_hash_column(source, self.info[f'non_pk_{source}'], "non_pk_hash")
-                print(1515151)
             else:
                 #add non_pk_hash column so that the fuzzy match function can be called
                 # even if there are no non_pk columns
                 # in the source table
                 add_column(source, "non_pk_hash", "INT",-1)
-                print(1616161)
-        print(222222)
         # Step 2: Generate row numbers for both datasets
         assign_row_numbers(self.info)
-        print(33333333)
         # Step 3: Find exact hash matches and tag as 'absolute' matches
         tag_exact_row_matches()
-        print(444444)
         # Step 4: Propagate last matched row number for remaining unmatched rows
         tag_last_matched_row_number()
-        print(555555)
         # Step 5: Generate probable fuzzy matches using Jaro-Winkler & Levenshtein
         run_fuzzy_matching(self.info)
-        print(666666)
         # Step 6: Tag match types and update original datasets
         update_fuzzy_match_types(self.info)
-        print(888888)
         # Step 7: Write output to disk
         for table in [
             "source1_matches", "source2_matches",
@@ -211,14 +201,11 @@ class Recon:
         ]:
             copy_table_disk(table, self.file_write_path)
         if args.platform == "databricks":
-            print("i am finallly in!!!!")
             full_file_path = os.path.join(self.file_write_path, 'recon_output.xlsx')
             dbutils.fs.cp(f"dbfs:/tmp/{args.run_id}/recon_output.xlsx", full_file_path)
             logging.info(f"{source} written to {full_file_path}")
             print(f"{source} written to {full_file_path}")
         else:
             print("args.run_id",args.run_id, "args.platform",args.platform, platform, session_guid)
-            print("weird error!!!!! as the platform is: ", args.platform, platform)
 
-        print(9999999)
 

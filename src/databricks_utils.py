@@ -645,6 +645,16 @@ def update_fuzzy_match_types(info):
     #     spark.sql(f"ALTER TABLE probable_match_{session_guid} DROP COLUMN {column}")
 
 
+# cleanup_utils.py
+def drop_temp_tables(session_guid):
+    tables = [
+        "source1", "source2", "source1_matches", "source2_matches",
+        "source1_minus_source2", "source2_minus_source1", "probable_match"
+    ]
+    for table in tables:
+        full_table = f"{table}_{session_guid}"
+        spark.sql(f"DROP TABLE IF EXISTS {full_table}")
+
 def dry_run():
         if __name__ == "__main__":
             print("🔍 Dry-run test starting...")
