@@ -62,8 +62,9 @@ class Recon:
             self.write_recon_with_soft_pk_and_cleanup_results()
         elif recon_type == "hierarchical_data":
             self.write_recon_hierarchical_data_results()
-        logging.info("Dropping temporary tables")
-        drop_temp_tables(args.run_id)
+        if args.platform == "databricks":
+            logging.info("Dropping temporary tables")
+            drop_temp_tables(args.run_id)
         logging.info(f"Recon completed and results written to {self.file_write_path}")
 
     def write_recon_with_pk_results(self):
