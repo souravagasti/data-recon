@@ -7,3 +7,5 @@ testing.ipynb
 .venv/
 .vscode/
 tests/
+.DS_Store
+__pycache__/
