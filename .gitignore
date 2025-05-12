@@ -6,3 +6,4 @@ templates/
 testing.ipynb
 .venv/
 .vscode/
+tests/
