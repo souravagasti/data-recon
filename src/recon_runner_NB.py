@@ -10,14 +10,22 @@ def run_recon_notebook(platform, source1_settings, source2_settings, recon_type,
     if platform == "duckdb":
         PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         if PROJECT_ROOT not in sys.path:
-            print(f"Adding {PROJECT_ROOT} to sys.path")
+            # print(f"Adding {PROJECT_ROOT} to sys.path")
             sys.path.insert(0, PROJECT_ROOT)
 
         from src.duckdb_io_utils import setup_logging, load_json_config, archive_input_files
     if platform == "databricks":
         PROJECT_ROOT = os.path.abspath(os.path.join(os.getcwd(), ".."))
         if PROJECT_ROOT not in sys.path:
-            print(f"Adding {PROJECT_ROOT} to sys.path")
+            # print(f"Adding {PROJECT_ROOT} to sys.path")
+            sys.path.insert(0, PROJECT_ROOT)
+
+        from src.databricks_io_utils import setup_logging, load_json_config, archive_input_files
+
+    if platform == "duckdb_on_databricks":
+        PROJECT_ROOT = os.path.abspath(os.path.join(os.getcwd(), ".."))
+        if PROJECT_ROOT not in sys.path:
+            # print(f"Adding {PROJECT_ROOT} to sys.path")
             sys.path.insert(0, PROJECT_ROOT)
 
         from src.databricks_io_utils import setup_logging, load_json_config, archive_input_files
@@ -32,7 +40,7 @@ def run_recon_notebook(platform, source1_settings, source2_settings, recon_type,
     args.run_mode = run_mode
 
     args.run_id = str(uuid.uuid4()).replace("-", "_")
-    print(f"args.run_id: {args.run_id}")
+    # print(f"args.run_id: {args.run_id}")
     
     from src.recon import Recon
     from src.recon_utils import validate_settings
@@ -76,14 +84,14 @@ def run_recon_notebook(platform, source1_settings, source2_settings, recon_type,
 
 if __name__ == "__main__":
     # # Example usage:
-    recon = run_recon_notebook(
-        platform="duckdb",
-        source1_settings="input/settings1.json",
-        source2_settings="input/settings2.json",
-        recon_type="hierarchical_data",
-        path_name="/Users/souravagasti/Downloads/recon-project"
+    # recon = run_recon_notebook(
+    #     platform="duckdb",
+    #     source1_settings="input/settings1.json",
+    #     source2_settings="input/settings2.json",
+    #     recon_type="hierarchical_data",
+    #     path_name="/Users/souravagasti/Downloads/recon-project"
 
-    )
+    # )
 
     # Example usage 2:
     # recon = run_recon_notebook(
@@ -94,5 +102,17 @@ if __name__ == "__main__":
     #     path_name="abfss://org1@souravagastiadls.dfs.core.windows.net/ext_cat/vol/recon-project/",
     #     run_mode="debug"
     # )
+
+        # # Example usage:
+    # recon = run_recon_notebook(
+    #     platform="duckdb_on_databricks",
+    #     source1_settings="/mnt/adls/recon-project/input/settings1.json",
+    #     source2_settings="/mnt/adls/recon-project/input/settings2.json",
+    #     recon_type="hierarchical_data",
+    #     path_name="/mnt/adls/recon-project"
+ 
+    # )
+
+    pass
 
 
