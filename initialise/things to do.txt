@@ -4,7 +4,7 @@ git add . To stage all
 git add path/to/your_file.py 		to stage particular
 git commit -m "Your meaningful commit message"
 git push origin main
-git diff --cached preview commit
+git diff --cached 		preview commit
 
 
 

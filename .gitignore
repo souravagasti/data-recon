@@ -9,3 +9,5 @@ testing.ipynb
 tests/
 .DS_Store
 __pycache__/
+input.zip
+initialise/
