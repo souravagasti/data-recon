@@ -1,6 +1,10 @@
-import uuid, os, json
+import uuid, os, json, pandas as pd
 import logging
 from databricks.sdk.runtime import *
+
+def create_pandas_df_from_csv(file_path):
+    """Creates a pandas DataFrame from a CSV file."""
+    return spark.read.csv(file_path, header=True).select('*').toPandas()
 
 def prepare_output_directory(base_path,run_id):
     """Generates a unique output directory under the given base path."""

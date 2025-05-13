@@ -2,6 +2,10 @@ import duckdb, os, logging, pandas as pd, sys, polars as pl, re as regex
 
 from src.duckdb_io_utils import prepare_output_directory
 from src.recon_utils import infer_excel_range
+from src.config import args
+from databricks.sdk.runtime import *
+
+platform = args.platform
 # from src.config import BASE_PATH
 
 # def rename_columns(table_name, mapping_df, source_col,original_to_clean):
@@ -150,10 +154,17 @@ def create_table_from_source(source_type, table_name, settings):
     else:
         raise ValueError(f"Unsupported source_type: {source_type}")
 
-def load_mapping_table_and_string_vars(path_name):
-    mapping_path = os.path.join(path_name, "input", "mapping.csv")
-    mapping_df = pd.read_csv(mapping_path)
-
+def load_mapping_table_and_string_vars(file_path):
+    # mapping_path = os.path.join(path_name, "input", "mapping.csv")
+    # mapping_df = create_pandas_df_from_csv(mapping_path)
+    # mapping_df = pd.read_csv(mapping_path)
+    if args.platform == "duckdb":
+        mapping_df = pd.read_csv(file_path)
+    if args.platform == "duckdb_on_databricks":
+        mapping_df = spark.read.csv(file_path, header=True).select('*').toPandas()
+    else:
+        pass
+    
     #Clean column names
     mapping_df["source1"] = mapping_df["source1"].apply(lambda x: regex.sub(r"[^a-zA-Z0-9]", "_", x))
     mapping_df["source2"] = mapping_df["source2"].apply(lambda x: regex.sub(r"[^a-zA-Z0-9]", "_", x))

@@ -197,17 +197,16 @@ def create_table_from_source(source_type, table_name, settings):
     else:
         raise ValueError(f"Unsupported source_type: {source_type}")
 
-def load_mapping_table_and_string_vars(path_name):
+def load_mapping_table_and_string_vars(file_path):
     import re, uuid,os
     from pyspark.sql import functions as F
     session_guid = uuid.uuid4().hex
 
-    mapping_path = os.path.join(path_name, "input", "mapping.csv")
-    mapping_df = spark.read.csv(mapping_path, header=True)
-
-    mapping_df = mapping_df.select('*').toPandas()
-
-
+    if args.platform == "databricks":
+        mapping_df = spark.read.csv(file_path, header=True).select('*').toPandas()
+    else:
+        pass
+    
     ####### below is SPARK compatible code. But to keep it simple
     ####### and since it's a small dataset, I chose to use pandas
 
@@ -231,12 +230,12 @@ def load_mapping_table_and_string_vars(path_name):
     cols_source1 = mapping_df["source1"].tolist()
     cols_source2 = mapping_df["source2"].tolist()
 
-    # spark.sql(f"drop table if exists col_mapping_{session_guid};")
-    # spark.sql(f"create table col_mapping_{session_guid}(col_name string, col_id integer)")
+    spark.sql(f"drop table if exists col_mapping_{session_guid};")
+    spark.sql(f"create table col_mapping_{session_guid}(col_name string, col_id integer)")
 
-    # for i,j in enumerate(zip(cols_source1, cols_source2)):
-    #     spark.sql(f"INSERT INTO col_mapping_{session_guid} SELECT 'source1_{j[0]}',{i}")
-    #     spark.sql(f"INSERT INTO col_mapping_{session_guid} SELECT 'source2_{j[1]}',{i}")
+    for i,j in enumerate(zip(cols_source1, cols_source2)):
+        spark.sql(f"INSERT INTO col_mapping_{session_guid} SELECT 'source1_{j[0]}',{i}")
+        spark.sql(f"INSERT INTO col_mapping_{session_guid} SELECT 'source2_{j[1]}',{i}")
 
     def prefix_cols(prefix, cols):
         return [f"{prefix}.{col}" for col in cols]
