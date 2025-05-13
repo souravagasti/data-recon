@@ -83,15 +83,15 @@ def run_recon_notebook(platform, source1_settings, source2_settings, recon_type,
     return recon  # Optional: return for additional inspection/debugging
 
 if __name__ == "__main__":
-    # # Example usage:
-    # recon = run_recon_notebook(
-    #     platform="duckdb",
-    #     source1_settings="input/settings1.json",
-    #     source2_settings="input/settings2.json",
-    #     recon_type="hierarchical_data",
-    #     path_name="/Users/souravagasti/Downloads/recon-project"
+    # Example usage:
+    recon = run_recon_notebook(
+        platform="duckdb",
+        source1_settings="input/html/settings1.json",
+        source2_settings="input/html/settings2.json",
+        recon_type="hierarchical_data",
+        path_name="/Users/souravagasti/Downloads/recon-project"
 
-    # )
+    )
 
     # Example usage 2:
     # recon = run_recon_notebook(

@@ -206,6 +206,12 @@ def create_table_from_source(source_type, table_name, settings):
         
         # Read from local file system
         tables = pd.read_html(local_path, header = 1)
+
+        # Clean column names
+        original_cols = tables[0].columns
+        cleaned_cols = [re.sub(r"[^a-zA-Z0-9]", "_", col).strip() for col in original_cols]
+        tables[0].columns = cleaned_cols
+
         df = spark.createDataFrame(tables[0])
         df.createOrReplaceTempView("df_temp")
 

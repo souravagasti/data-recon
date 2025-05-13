@@ -3,51 +3,6 @@ import duckdb, os, logging, pandas as pd, sys, polars as pl, re as regex
 from src.duckdb_io_utils import prepare_output_directory
 from src.recon_utils import infer_excel_range
 from src.config import args
-from databricks.sdk.runtime import *
-
-platform = args.platform
-# from src.config import BASE_PATH
-
-# def rename_columns(table_name, mapping_df, source_col,original_to_clean):
-#     """
-#     Converts column names to clean column names or vice-versa
-#     """
-#     if original_to_clean:
-#         # Create a mapping from original to clean column names
-#         col_map = dict(zip(mapping_df[source_col], mapping_df[f"clean_{source_col}"]))
-#     else:
-#         # Create a mapping from clean to original column names
-#         col_map = dict(zip(mapping_df[f"clean_{source_col}"], mapping_df[source_col]))
-    
-#     # Rename columns in the DuckDB table
-#     for before_col, after_col in col_map.items():
-#         if before_col != after_col:  # Only rename if names differ
-#             duckdb.sql(f"""ALTER TABLE {table_name} RENAME COLUMN "{before_col}" TO "{after_col}" """)
-
-
-    # clean_col = "clean_" + source_col
-    # original_col = source_col
-
-    # if original_to_clean:
-    #     rename_clauses = [
-    #         f"\"{mapping_df.loc[i, original_col]}\" AS {mapping_df.loc[i, clean_col]}"
-    #         for i in range(len(mapping_df))
-    #     ]
-    # else:
-    #     rename_clauses = [
-    #         f"\"{mapping_df.loc[i, clean_col]}\" AS {mapping_df.loc[i, original_col]}"
-    #         for i in range(len(mapping_df))
-    #     ]
-    
-    # print(f''' fucking error
-    #     CREATE OR REPLACE TEMPORARY TABLE {table_name} AS
-    #     SELECT {", ".join(rename_clauses)} FROM {table_name}
-    # ''')
-
-    # duckdb.sql(f'''
-    #     CREATE OR REPLACE TEMPORARY TABLE {table_name} AS
-    #     SELECT {", ".join(rename_clauses)} FROM {table_name}
-    # ''')
 
 
 def dedup_table(source, pk):
@@ -90,7 +45,7 @@ def create_table_from_source(source_type, table_name, settings):
 
         # Step 2: Clean column names
         import re
-        cleaned_cols = [re.sub(r"[^a-zA-Z0-9]", "_", col) for col in original_cols]
+        cleaned_cols = [regex.sub(r"[^a-zA-Z0-9]", "_", col) for col in original_cols]
 
         # Step 3: Build SELECT projection
         select_expr = ", ".join([f'"{orig}" AS {clean}' for orig, clean in zip(original_cols, cleaned_cols)])
@@ -114,7 +69,7 @@ def create_table_from_source(source_type, table_name, settings):
     elif source_type == "local_parquet":
         raw_df = duckdb.sql(f"SELECT * FROM '{settings['file_path']}' LIMIT 100").df()
         original_cols = raw_df.columns
-        cleaned_cols = [re.sub(r"[^a-zA-Z0-9]", "_", col.strip()) for col in original_cols]
+        cleaned_cols = [regex.sub(r"[^a-zA-Z0-9]", "_", col.strip()) for col in original_cols]
         select_expr = ", ".join([f'"{orig}" AS {clean}' for orig, clean in zip(original_cols, cleaned_cols)])
 
         duckdb.sql(f"""
@@ -155,8 +110,18 @@ def create_table_from_source(source_type, table_name, settings):
         file_path = settings['file_path']
 
         tables = pd.read_html(file_path, header = 1)
+
+        # Clean column names
+        original_cols = tables[0].columns
+        cleaned_cols = [regex.sub(r"[^a-zA-Z0-9]", "_", col).strip() for col in original_cols]
+  
+        tables[0].columns = cleaned_cols
+
+        duckdb.register(f"{table_name}_df",tables[0])
+        duckdb.sql(f"""CREATE OR REPLACE TEMPORARY TABLE {table_name} AS SELECT * FROM {table_name}_df""")
+
+        # print(duckdb.sql(f"SELECT * FROM {table_name} limit 2").df())
         # print(tables[0].columns)
-        display(tables[0])
 
     else:
         raise ValueError(f"Unsupported source_type: {source_type}")
@@ -168,7 +133,8 @@ def load_mapping_table_and_string_vars(file_path):
     if args.platform == "duckdb":
         mapping_df = pd.read_csv(file_path)
     if args.platform == "duckdb_on_databricks":
-        mapping_df = spark.read.csv(file_path, header=True).select('*').toPandas()
+        from src.databricks_io_utils import create_pandas_df_from_csv
+        mapping_df = create_pandas_df_from_csv(file_path)
     else:
         pass
     
@@ -192,7 +158,7 @@ def load_mapping_table_and_string_vars(file_path):
 
     def prefix_cols(prefix, cols):
         return [f"{prefix}.{col}" for col in cols]
-
+    
     return {
         "mapping_df": mapping_df,
         "pk_source1": pk_source1,

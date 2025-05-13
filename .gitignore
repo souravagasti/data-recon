@@ -1,5 +1,7 @@
 databricks.yml
 input/
+excel/
+html/
 .databricks
 run_output/
 templates/
