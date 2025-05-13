@@ -194,6 +194,23 @@ def create_table_from_source(source_type, table_name, settings):
             SELECT * FROM delta.`{settings['table_url']}`
         """)
 
+    elif source_type == "local_html_type_1":
+        import os
+        import pandas as pd
+        
+        file_path = settings['file_path']
+        local_path = f"/dbfs/tmp/{os.path.basename(file_path)}"
+        
+        # Copy from ADLS to DBFS-local
+        dbutils.fs.cp(file_path, f"dbfs:/tmp/{os.path.basename(file_path)}")
+        
+        # Read from local file system
+        tables = pd.read_html(local_path, header = 1)
+        df = spark.createDataFrame(tables[0])
+        df.createOrReplaceTempView("df_temp")
+
+        spark.sql(f"CREATE OR REPLACE TABLE {table_name}_{session_guid} AS SELECT * FROM df_temp")
+
     else:
         raise ValueError(f"Unsupported source_type: {source_type}")
 

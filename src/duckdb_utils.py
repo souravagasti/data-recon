@@ -151,6 +151,13 @@ def create_table_from_source(source_type, table_name, settings):
             SELECT * FROM delta_scan("{settings['table_url']}")
         """)
 
+    elif source_type == "local_html_type_1":
+        file_path = settings['file_path']
+
+        tables = pd.read_html(file_path, header = 1)
+        # print(tables[0].columns)
+        display(tables[0])
+
     else:
         raise ValueError(f"Unsupported source_type: {source_type}")
 
