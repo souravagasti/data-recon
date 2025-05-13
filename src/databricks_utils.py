@@ -467,7 +467,7 @@ def tag_exact_row_matches():
         spark.sql(f"""
             ALTER TABLE {source}_with_rn_{session_guid} ADD COLUMN match_type STRING;
         """)
-        print(4.1)
+        # print(4.1)
         spark.sql(f"""
     MERGE INTO {source}_with_rn_{session_guid} AS target
     USING (
@@ -485,12 +485,12 @@ def tag_exact_row_matches():
         match_type = 'absolute'
 """)
 
-        print(4.2)
+        # print(4.2)
         spark.sql(f"""UPDATE {source}_with_rn_{session_guid}
             SET matched = False
             WHERE matched != True
             """)
-        print(4.3)
+        # print(4.3)
 
 def tag_last_matched_row_number():
 
