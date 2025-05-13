@@ -74,30 +74,25 @@ def run_recon_notebook(platform, source1_settings, source2_settings, recon_type,
 
     return recon  # Optional: return for additional inspection/debugging
 
-
-# # Example usage:
-# recon = run_recon_notebook(
-#     platform="local",
-#     source1_settings="input/settings1.json",
-#     source2_settings="input/settings2.json",
-#     recon_type="hierarchical_data",
-#     path_name="/Users/souravagasti/Downloads/recon-project"
-
-# )
-
-# Example usage 2:
-recon = run_recon_notebook(
-    platform="databricks",
-    source1_settings="abfss://org1@souravagastiadls.dfs.core.windows.net/ext_cat/vol/recon-project/input/settings1.json",
-    source2_settings="abfss://org1@souravagastiadls.dfs.core.windows.net/ext_cat/vol/recon-project/input/settings2.json",
-    recon_type="hierarchical_data",
-    path_name="abfss://org1@souravagastiadls.dfs.core.windows.net/ext_cat/vol/recon-project/",
-    run_mode="debug"
-)
-
-
-def main():
-    print("Running reconciliation notebook...")
-
 if __name__ == "__main__":
-    main()
+    # # Example usage:
+    recon = run_recon_notebook(
+        platform="duckdb",
+        source1_settings="input/settings1.json",
+        source2_settings="input/settings2.json",
+        recon_type="hierarchical_data",
+        path_name="/Users/souravagasti/Downloads/recon-project"
+
+    )
+
+    # Example usage 2:
+    # recon = run_recon_notebook(
+    #     platform="databricks",
+    #     source1_settings="abfss://org1@souravagastiadls.dfs.core.windows.net/ext_cat/vol/recon-project/input/settings1.json",
+    #     source2_settings="abfss://org1@souravagastiadls.dfs.core.windows.net/ext_cat/vol/recon-project/input/settings2.json",
+    #     recon_type="hierarchical_data",
+    #     path_name="abfss://org1@souravagastiadls.dfs.core.windows.net/ext_cat/vol/recon-project/",
+    #     run_mode="debug"
+    # )
+
+
