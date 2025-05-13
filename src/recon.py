@@ -30,6 +30,9 @@ if args.platform == "duckdb":
 if args.platform == "databricks":
     from src.databricks_utils import *
     from src.databricks_io_utils import *
+if args.platform == "duckdb_on_databricks":
+    from src.duckdb_utils import *
+    from src.databricks_io_utils import *
 
 class Recon:
     def __init__(self, path_name, source_type_1, settings1, source_type_2, settings2):

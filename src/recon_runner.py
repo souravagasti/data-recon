@@ -5,7 +5,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Run data reconciliation job.")
 
-    parser.add_argument("--platform", choices=["duckdb", "databricks"], default="duckdb", help="Execution platform")
+    parser.add_argument("--platform", choices=["duckdb", "databricks", "duckdb_on_databricks"], default="duckdb", help="Execution platform")
     parser.add_argument("--source1_settings", required=True, help="Path to source1 JSON config")
     parser.add_argument("--source2_settings", required=True, help="Path to source2 JSON config")
     parser.add_argument("--recon_type", required=True, help="Recon type (e.g. pk_standard, hierarchical_data)")
@@ -21,6 +21,7 @@ def main():
             sys.path.insert(0, PROJECT_ROOT)
 
         from src.duckdb_io_utils import setup_logging, load_json_config, archive_input_files
+        
     if args_input.platform == "databricks":
         PROJECT_ROOT = os.path.abspath(os.path.join(os.getcwd(), ".."))
         if PROJECT_ROOT not in sys.path:
@@ -28,6 +29,15 @@ def main():
             sys.path.insert(0, PROJECT_ROOT)
 
         from src.databricks_io_utils import setup_logging, load_json_config, archive_input_files
+
+    if args_input.platform == "duckdb_on_databricks":
+        PROJECT_ROOT = os.path.abspath(os.path.join(os.getcwd(), ".."))
+        if PROJECT_ROOT not in sys.path:
+            # print(f"Adding {PROJECT_ROOT} to sys.path")
+            sys.path.insert(0, PROJECT_ROOT)
+
+        from src.databricks_io_utils import setup_logging, load_json_config, archive_input_files
+
     
     from src.config import args
 
