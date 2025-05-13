@@ -186,7 +186,7 @@ class Recon:
                 #add non_pk_hash column so that the fuzzy match function can be called
                 # even if there are no non_pk columns
                 # in the source table
-                add_column(source, "non_pk_hash", "INT",-1)
+                add_column(source, "non_pk_hash", "INT")
         # Step 2: Generate row numbers for both datasets
         assign_row_numbers(self.info)
         # Step 3: Find exact hash matches and tag as 'absolute' matches

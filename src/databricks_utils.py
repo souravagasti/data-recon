@@ -432,14 +432,10 @@ def match_using_soft_pk(info):
         WHERE all_cols_hash NOT IN (SELECT all_cols_hash FROM source1_{session_guid})
     """)
     
-def add_column(table_name, col_name, data_type = "STRING", default_val = False):
+def add_column(table_name, col_name, data_type = "STRING"):
     add_col_sql = f"alter table {table_name}_{session_guid} add column {col_name} {data_type}"
     spark.sql(add_col_sql)
-    if default_val:
-        # add_col_sql = f"alter table {table_name}_{session_guid} alter column {col_name} set default {default_val}"
-        pass
-    # print(add_col_sql) 
-    # spark.sql(add_col_sql)
+
 
 def cleanse_columns(table_name, col_list):
     """Cleanses each column in the table by removing non-alphanumeric characters."""
