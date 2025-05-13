@@ -439,7 +439,7 @@ def add_column(table_name, col_name, data_type = "STRING", default_val = False):
         # add_col_sql = f"alter table {table_name}_{session_guid} alter column {col_name} set default {default_val}"
         pass
     # print(add_col_sql) 
-    spark.sql(add_col_sql)
+    # spark.sql(add_col_sql)
 
 def cleanse_columns(table_name, col_list):
     """Cleanses each column in the table by removing non-alphanumeric characters."""
