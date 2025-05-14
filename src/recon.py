@@ -44,7 +44,6 @@ class Recon:
         self.source_type_2 = source_type_2
         self.settings2 = settings2
         # print("inside init")
-        print("args.run_id",args.run_id, "args.platform",args.platform)
         self.file_write_path = prepare_output_directory(self.path_name,session_guid)
         # args.run_id = self.run_id
         self.recon_scenario = []
@@ -129,6 +128,7 @@ class Recon:
             # dbutils.fs.cp(f"dbfs:/tmp/recon_output_{args.run_id}.xlsx", full_file_path)
             dbutils.fs.cp(f"file:{local_tmp_path}", f"dbfs:/tmp/recon_output_{session_guid}.xlsx")
             dbutils.fs.cp(f"dbfs:/tmp/recon_output_{session_guid}.xlsx", full_file_path)
+        
             logging.info(f"{source} written to {full_file_path}")
             print(f"{source} written to {full_file_path}")
 
@@ -210,7 +210,6 @@ class Recon:
             dbutils.fs.cp(f"dbfs:/tmp/{args.run_id}/recon_output.xlsx", full_file_path)
             logging.info(f"{source} written to {full_file_path}")
             print(f"{source} written to {full_file_path}")
-        else:
-            print("args.run_id",args.run_id, "args.platform",args.platform, platform, session_guid)
+
 
 

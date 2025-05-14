@@ -131,9 +131,6 @@ def create_table_from_source(source_type, table_name, settings):
             duckdb.register(f"{table_name}_df",tables[0])
             duckdb.sql(f"""CREATE OR REPLACE TEMPORARY TABLE {table_name} AS SELECT * FROM {table_name}_df""")
 
-            # print(duckdb.sql(f"SELECT * FROM {table_name} limit 2").df())
-            # print(tables[0].columns)
-
         else:
             raise ValueError(f"Unsupported source_type: {source_type}")
 
@@ -243,7 +240,6 @@ def create_exclusive_diff_tables(info):
     """)
 
 def create_column_mismatches_table(info):
-    import duckdb
     duckdb.sql(rf"""
         CREATE TEMP TABLE column_mismatches AS
         SELECT * FROM (
@@ -324,10 +320,18 @@ def match_using_soft_pk(info):
     """)
 
 
-def add_column(table_name, col_name, data_type = "STRING", default_val = False):
+def add_column(table_name, col_name, data_type = "STRING"):
     add_col_sql = f"alter table {table_name} add column {col_name} {data_type}"
-    if default_val:
-        add_col_sql += f" default {default_val}"
+    if data_type == "STRING" or data_type == "VARCHAR":
+        add_col_sql += f" default ''"
+    if data_type == "INTEGER" or data_type == "INT":
+        add_col_sql += f" default -1"
+    if data_type == "BOOLEAN":
+        add_col_sql += f" default False"
+    if data_type == "FLOAT" or data_type == "DOUBLE":
+        add_col_sql += f" default 0.0"
+    if data_type == "DATE" or data_type == "TIMESTAMP":
+        add_col_sql += f" default '1970-01-01'"
     # print(add_col_sql) 
     duckdb.sql(add_col_sql)
 
@@ -346,7 +350,6 @@ def cleanse_columns(table_name, col_list):
 
 def assign_row_numbers(info):
     """assigns row number based on pk columns"""
-    import duckdb
 
     for source in ["source1", "source2"]:
         col_list = ", ".join(info[f"pk_{source}"])
@@ -357,7 +360,6 @@ def assign_row_numbers(info):
         """)
 
 def tag_exact_row_matches():
-    import duckdb
 
     duckdb.sql(f"""
         CREATE OR REPLACE TEMP TABLE matched AS
@@ -438,40 +440,6 @@ def run_fuzzy_matching(info):
     jws_expr = " + ".join([f"{w} * {col}" for w, col in zip(weights, jws_cols)])
     ls_expr = " + ".join([f"{w} * {col}" for w, col in zip(weights, ls_cols)])
     denominator = sum(weights)
-
-    # print(f"""
-    #     CREATE OR REPLACE TEMP TABLE probable_match AS
-    #     SELECT *,
-    #            ({jws_expr}) / {denominator} AS jws_weighted,
-    #            ({ls_expr}) / {denominator} AS ls_weighted,
-    #            ROW_NUMBER() OVER (
-    #                PARTITION BY source1_row_num
-    #                ORDER BY CASE
-    #                    WHEN ({jws_expr}) / {denominator} > ({ls_expr}) / {denominator}
-    #                    THEN ({jws_expr}) / {denominator}
-    #                    ELSE ({ls_expr}) / {denominator}
-    #                END DESC
-    #            ) AS rn
-    #     FROM (
-    #         SELECT {select_string},
-    #                source1.row_num AS source1_row_num,
-    #                source2.row_num AS source2_row_num,
-    #                source1.non_pk_hash AS source1_non_pk_hash,
-    #                source2.non_pk_hash AS source2_non_pk_hash
-    #         FROM source1_with_last_matched_rn source1
-    #         JOIN source2_with_last_matched_rn source2
-    #           ON source1.last_matched_row_num = source2.last_matched_row_num
-    #         WHERE source1.matched IS NULL
-    #           AND source2.matched IS NULL
-    #           AND source1.non_pk_hash = source2.non_pk_hash --will attempt recon only if non_pk_hashes are same
-    #     )
-    #     WHERE GREATEST(
-    #         ({jws_expr}) / {denominator},
-    #         ({ls_expr}) / {denominator}
-    #     ) >= 0.7 -- Adjust threshold as needed
-        
-
-    # """)
 
     duckdb.sql(f"""
         CREATE OR REPLACE TEMP TABLE probable_match AS

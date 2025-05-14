@@ -12,8 +12,6 @@ from databricks.sdk.runtime import *
 # session_guid = str(uuid.uuid4())
 # session_guid = session_guid.replace("-", "_")
 session_guid = args.run_id
-print(f"Session GUID: {session_guid}")
-print("args.platform",args.platform)
 
 spark.sql("create schema if not exists temp_recon")
 spark.sql(f"use schema temp_recon")
