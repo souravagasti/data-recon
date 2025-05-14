@@ -68,7 +68,6 @@ class Recon:
         if args.platform == "databricks":
             logging.info("Dropping temporary tables")
             drop_temp_tables(args.run_id)
-        logging.info(f"Recon completed and results written to {self.file_write_path}")
 
     def write_recon_with_pk_results(self):
         """Performs PK-based recon and exports mismatches to disk."""
