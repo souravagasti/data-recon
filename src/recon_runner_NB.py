@@ -82,9 +82,9 @@ def run_recon_notebook(platform, source1_settings, source2_settings, recon_type,
         (source2_settings, "settings2.json"),
         (mapping_path, "mapping.csv")
     )
-        full_file_path = os.path.join(args.path_name,args.run_id)
-        print(f"Mismatches found during reconciliation and logged to {full_file_path}")
-        logging.info("Mismatches found during reconciliation and logged to {full_file_path}")
+        # full_file_path = os.path.join(args.path_name,args.run_id)
+        # print(f"Mismatches found during reconciliation and logged to {full_file_path}")
+        # logging.info("Mismatches found during reconciliation and logged to {full_file_path}")
 
     else:
         print("No mismatches found during reconciliation!")

@@ -91,9 +91,9 @@ def main():
         (args_input.source2_settings, "settings2.json"),
         (mapping_path, "mapping.csv"))
 
-        full_file_path = os.path.join(args.path_name,args.run_id)
-        print(f"Mismatches found during reconciliation and logged to {full_file_path}")
-        logging.info(f"Mismatches found during reconciliation and logged to {full_file_path}")
+        # full_file_path = os.path.join(args.path_name,args.run_id)
+        # print(f"Mismatches found during reconciliation and logged to {full_file_path}")
+        # logging.info(f"Mismatches found during reconciliation and logged to {full_file_path}")
 
     else:
         print("No mismatches found during reconciliation!")
