@@ -1,6 +1,5 @@
 import os, logging, pandas as pd, sys, re, uuid, pyspark.pandas as ps
 from math import floor, ceil
-#heheheehh
 
 from src.databricks_io_utils import prepare_output_directory
 from src.recon_utils import infer_excel_range
@@ -133,37 +132,20 @@ def create_secret_adls(account_name, sas_token_variable):
     spark.sql(sql1)
     spark.sql(sql2)
 
-def create_table_from_source(source_type, table_name, settings):
-    """Creates temp delta tables from various sources based on provided settings."""
-    logging.info(f"	Creating table {table_name} from source: {source_type}")
-
+def create_df_from_source(source_type, table_name, settings):
     if source_type == "local_csv":
 
         df = spark.read.csv(settings["file_path"], header=settings.get("has_header", True), sep=settings.get("sep", ","))
 
         for col in df.columns:
             df = df.withColumnRenamed(col, re.sub(r'[^a-zA-Z0-9_]', '_', col)) #clean columns
-
-        df.createOrReplaceTempView("df_temp")
-
-        spark.sql(rf"""
-        CREATE OR REPLACE TABLE {table_name}_{session_guid}
-        AS SELECT * FROM df_temp
-        """)
-
+        
     elif source_type == "local_parquet":
 
         df = spark.read.parquet(settings["file_path"])
 
         for col in df.columns:
             df = df.withColumnRenamed(col, re.sub(r'[^a-zA-Z0-9_]', '_', col)) #clean columns
-
-        df.createOrReplaceTempView("df_temp")
-
-        spark.sql(rf"""
-        CREATE OR REPLACE TABLE {table_name}_{session_guid}
-        AS SELECT * FROM df_temp
-        """)
 
     elif source_type == "local_excel":
 
@@ -181,16 +163,9 @@ def create_table_from_source(source_type, table_name, settings):
         for col in df.columns:
             df = df.withColumnRenamed(col, re.sub(r'[^a-zA-Z0-9_]', '_', col)) #clean columns
 
-        df.createOrReplaceTempView("df_temp")
-
-        spark.sql(f"CREATE OR REPLACE TABLE {table_name}_{session_guid} AS SELECT * FROM df_temp")
-
-        # spark.sql(f"CREATE OR REPLACE TABLE {table_name}_{session_guid} AS SELECT * FROM {df},df=df")
-        
     elif source_type == "uc_table":
         # create_secret_adls(settings['account_name'], settings['sas_token_variable'])
-        spark.sql(f"""
-            CREATE TABLE {table_name}_{session_guid} AS
+        df = spark.sql(f"""
             SELECT * FROM delta.`{settings['table_url']}`
         """)
 
@@ -213,12 +188,24 @@ def create_table_from_source(source_type, table_name, settings):
         tables[0].columns = cleaned_cols
 
         df = spark.createDataFrame(tables[0])
-        df.createOrReplaceTempView("df_temp")
-
-        spark.sql(f"CREATE OR REPLACE TABLE {table_name}_{session_guid} AS SELECT * FROM df_temp")
 
     else:
         raise ValueError(f"Unsupported source_type: {source_type}")
+    
+    return df
+
+def create_table_from_source(source_type, table_name, settings):
+    """Creates temp delta tables from various sources based on provided settings."""
+    logging.info(f"	Creating table {table_name} from source: {source_type}")
+
+    df = create_df_from_source(source_type, table_name, settings)
+    
+    df.createOrReplaceTempView("df_temp")
+
+    spark.sql(rf"""
+    CREATE OR REPLACE TABLE {table_name}_{session_guid}
+    AS SELECT * FROM df_temp
+    """)
 
 def load_mapping_table_and_string_vars(file_path):
     import re, uuid,os

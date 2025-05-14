@@ -33,98 +33,109 @@ def create_secret_adls(account_name, sas_token_variable):
     """        
     duckdb.sql(sql)
 
-
 def create_table_from_source(source_type, table_name, settings):
     """Creates in-memory temp tables from various sources based on provided settings."""
     logging.info(f"	Creating table {table_name} from source: {source_type}")
 
-    if source_type == "local_csv":
-        # Step 1: Preview columns
-        raw_df = duckdb.sql(f"SELECT * FROM read_csv_auto('{settings['file_path']}', header={settings.get('has_header', True)}, sep='{settings.get('sep', ',')}') LIMIT 100").df()
-        original_cols = raw_df.columns
-
-        # Step 2: Clean column names
-        import re
-        cleaned_cols = [regex.sub(r"[^a-zA-Z0-9]", "_", col) for col in original_cols]
-
-        # Step 3: Build SELECT projection
-        select_expr = ", ".join([f'"{orig}" AS {clean}' for orig, clean in zip(original_cols, cleaned_cols)])
-
-        # Step 4: Load into table directly with cleaned names
-        duckdb.sql(f"""
-            CREATE OR REPLACE TEMPORARY TABLE {table_name} AS
-            SELECT {select_expr}
-            FROM read_csv_auto('{settings['file_path']}', header={settings.get('has_header', True)}, sep='{settings.get('sep', ',')}')
-        """)
-
-
-        duckdb.sql(rf"""
-            CREATE OR REPLACE TEMPORARY TABLE {table_name} AS
-            SELECT * FROM read_csv('{settings['file_path']}',
-                header={settings.get('has_header', True)},
-                sep='{settings.get('sep', ',')}',
-                ignore_errors=True)
-        """)
-
-    elif source_type == "local_parquet":
-        raw_df = duckdb.sql(f"SELECT * FROM '{settings['file_path']}' LIMIT 100").df()
-        original_cols = raw_df.columns
-        cleaned_cols = [regex.sub(r"[^a-zA-Z0-9]", "_", col.strip()) for col in original_cols]
-        select_expr = ", ".join([f'"{orig}" AS {clean}' for orig, clean in zip(original_cols, cleaned_cols)])
+    if args.platform == "duckdb_on_databricks":
+        from src.databricks_utils import create_df_from_source
+        df_spark = create_df_from_source(source_type, table_name, settings)
+        df_pandas = df_spark.toPandas()
+        duckdb.register(table_name + "_df", df_pandas)
 
         duckdb.sql(f"""
-            CREATE OR REPLACE TEMPORARY TABLE {table_name} AS
-            SELECT {select_expr}
-            FROM '{settings['file_path']}'
-        """)
+                CREATE OR REPLACE TEMPORARY TABLE {table_name} AS
+                SELECT * FROM {table_name}_df
+            """)
 
-    elif source_type == "local_excel":
-        file_path = settings['file_path']
-        # skip_rows = settings.get("skip_rows", 0)
-        sheet_name = settings.get("sheet_name", "Sheet1")
+    if args.platform == "duckdb":
+        if source_type == "local_csv":
+            # Step 1: Preview columns
+            raw_df = duckdb.sql(f"SELECT * FROM read_csv_auto('{settings['file_path']}', header={settings.get('has_header', True)}, sep='{settings.get('sep', ',')}') LIMIT 100").df()
+            original_cols = raw_df.columns
 
-        # Read Excel file into Polars DataFrame
-        pl_df = pl.read_excel(file_path, sheet_name=sheet_name)
+            # Step 2: Clean column names
+            import re
+            cleaned_cols = [regex.sub(r"[^a-zA-Z0-9]", "_", col) for col in original_cols]
 
-        # Clean column names
-        pl_df = pl_df.rename({col: regex.sub(r"[^a-zA-Z0-9]", "_", col.strip()) for col in pl_df.columns})
+            # Step 3: Build SELECT projection
+            select_expr = ", ".join([f'"{orig}" AS {clean}' for orig, clean in zip(original_cols, cleaned_cols)])
 
-        # Register Polars DataFrame into DuckDB
-        duckdb.register(table_name + "_df", pl_df)
-
-        # Create DuckDB table from the registered DataFrame
-        duckdb.sql(f"""
-            CREATE OR REPLACE TEMPORARY TABLE {table_name} AS
-            SELECT * FROM {table_name}_df
-        """)
+            # Step 4: Load into table directly with cleaned names
+            duckdb.sql(f"""
+                CREATE OR REPLACE TEMPORARY TABLE {table_name} AS
+                SELECT {select_expr}
+                FROM read_csv_auto('{settings['file_path']}', header={settings.get('has_header', True)}, sep='{settings.get('sep', ',')}')
+            """)
 
 
-    elif source_type == "adls_delta_sas":
-        create_secret_adls(settings['account_name'], settings['sas_token_variable'])
-        duckdb.sql(f"""
-            CREATE TEMPORARY TABLE {table_name} AS
-            SELECT * FROM delta_scan("{settings['table_url']}")
-        """)
+            duckdb.sql(rf"""
+                CREATE OR REPLACE TEMPORARY TABLE {table_name} AS
+                SELECT * FROM read_csv('{settings['file_path']}',
+                    header={settings.get('has_header', True)},
+                    sep='{settings.get('sep', ',')}',
+                    ignore_errors=True)
+            """)
 
-    elif source_type == "local_html_type_1":
-        file_path = settings['file_path']
+        elif source_type == "local_parquet":
+            raw_df = duckdb.sql(f"SELECT * FROM '{settings['file_path']}' LIMIT 100").df()
+            original_cols = raw_df.columns
+            cleaned_cols = [regex.sub(r"[^a-zA-Z0-9]", "_", col.strip()) for col in original_cols]
+            select_expr = ", ".join([f'"{orig}" AS {clean}' for orig, clean in zip(original_cols, cleaned_cols)])
 
-        tables = pd.read_html(file_path, header = 1)
+            duckdb.sql(f"""
+                CREATE OR REPLACE TEMPORARY TABLE {table_name} AS
+                SELECT {select_expr}
+                FROM '{settings['file_path']}'
+            """)
 
-        # Clean column names
-        original_cols = tables[0].columns
-        cleaned_cols = [regex.sub(r"[^a-zA-Z0-9]", "_", col).strip() for col in original_cols]
-  
-        tables[0].columns = cleaned_cols
+        elif source_type == "local_excel":
+            file_path = settings['file_path']
+            # skip_rows = settings.get("skip_rows", 0)
+            sheet_name = settings.get("sheet_name", "Sheet1")
 
-        duckdb.register(f"{table_name}_df",tables[0])
-        duckdb.sql(f"""CREATE OR REPLACE TEMPORARY TABLE {table_name} AS SELECT * FROM {table_name}_df""")
+            # Read Excel file into Polars DataFrame
+            pl_df = pl.read_excel(file_path, sheet_name=sheet_name)
 
-        # print(duckdb.sql(f"SELECT * FROM {table_name} limit 2").df())
-        # print(tables[0].columns)
+            # Clean column names
+            pl_df = pl_df.rename({col: regex.sub(r"[^a-zA-Z0-9]", "_", col.strip()) for col in pl_df.columns})
 
-    else:
-        raise ValueError(f"Unsupported source_type: {source_type}")
+            # Register Polars DataFrame into DuckDB
+            duckdb.register(table_name + "_df", pl_df)
+
+            # Create DuckDB table from the registered DataFrame
+            duckdb.sql(f"""
+                CREATE OR REPLACE TEMPORARY TABLE {table_name} AS
+                SELECT * FROM {table_name}_df
+            """)
+
+
+        elif source_type == "adls_delta_sas":
+            create_secret_adls(settings['account_name'], settings['sas_token_variable'])
+            duckdb.sql(f"""
+                CREATE TEMPORARY TABLE {table_name} AS
+                SELECT * FROM delta_scan("{settings['table_url']}")
+            """)
+
+        elif source_type == "local_html_type_1":
+            file_path = settings['file_path']
+
+            tables = pd.read_html(file_path, header = 1)
+
+            # Clean column names
+            original_cols = tables[0].columns
+            cleaned_cols = [regex.sub(r"[^a-zA-Z0-9]", "_", col).strip() for col in original_cols]
+    
+            tables[0].columns = cleaned_cols
+
+            duckdb.register(f"{table_name}_df",tables[0])
+            duckdb.sql(f"""CREATE OR REPLACE TEMPORARY TABLE {table_name} AS SELECT * FROM {table_name}_df""")
+
+            # print(duckdb.sql(f"SELECT * FROM {table_name} limit 2").df())
+            # print(tables[0].columns)
+
+        else:
+            raise ValueError(f"Unsupported source_type: {source_type}")
 
 def load_mapping_table_and_string_vars(file_path):
     # mapping_path = os.path.join(path_name, "input", "mapping.csv")
