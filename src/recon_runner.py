@@ -72,7 +72,7 @@ def main():
         source_type_2=settings2.get("source_type", "local_csv"),
         settings2=settings2
     )
-    print("recon.file_write_path", recon.file_write_path)
+    # print("recon.file_write_path", recon.file_write_path)
     # Set up logging
     setup_logging(recon.file_write_path)
 
