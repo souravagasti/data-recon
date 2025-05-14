@@ -90,8 +90,8 @@ class Recon:
         if args.platform == "databricks":
             full_file_path = os.path.join(self.file_write_path, 'recon_output.xlsx')
             dbutils.fs.cp(f"dbfs:/tmp/{args.run_id}/recon_output.xlsx", full_file_path)
-            logging.info(f"{source} written to {full_file_path}")
-            print(f"{source} written to {full_file_path}")
+            # logging.info(f"{source} written to {full_file_path}")
+            # print(f"{source} written to {full_file_path}")
 
             ##put mapping_df in config.py later
 
@@ -120,17 +120,17 @@ class Recon:
             "source1", "source2"
         ]:
             copy_table_disk(table, self.file_write_path)
-                        # copy_table_disk(table, self.file_write_path, self.recon_scenario, self.info["mapping_df"])
-        if args.platform == "databricks":
-            full_file_path = os.path.join(self.file_write_path, 'recon_output.xlsx')
-            local_tmp_path = f"/tmp/recon_output_{session_guid}.xlsx"
+                        
+            if args.platform == "databricks":
+                full_file_path = os.path.join(self.file_write_path, 'recon_output.xlsx')
+                local_tmp_path = f"/tmp/recon_output_{session_guid}.xlsx"
 
-            # dbutils.fs.cp(f"dbfs:/tmp/recon_output_{args.run_id}.xlsx", full_file_path)
-            dbutils.fs.cp(f"file:{local_tmp_path}", f"dbfs:/tmp/recon_output_{session_guid}.xlsx")
-            dbutils.fs.cp(f"dbfs:/tmp/recon_output_{session_guid}.xlsx", full_file_path)
-        
-            logging.info(f"{source} written to {full_file_path}")
-            print(f"{source} written to {full_file_path}")
+                # dbutils.fs.cp(f"dbfs:/tmp/recon_output_{args.run_id}.xlsx", full_file_path)
+                dbutils.fs.cp(f"file:{local_tmp_path}", f"dbfs:/tmp/recon_output_{session_guid}.xlsx")
+                dbutils.fs.cp(f"dbfs:/tmp/recon_output_{session_guid}.xlsx", full_file_path)
+            
+                # logging.info(f"{source} written to {full_file_path}")
+                # print(f"{source} written to {full_file_path}")
 
     # def write_recon_soft_pk_fuzzy_data_results(self):
     #     """Performs recon on data with soft pks using hierarchical fuzzy logic."""
@@ -212,8 +212,8 @@ class Recon:
             #do an extra copy to the recon_output file from temp location
             dbutils.fs.cp(f"dbfs:/tmp/{args.run_id}/recon_output.xlsx", full_file_path)
 
-        logging.info(f"{source} written to {full_file_path}")
-        print(f"{source} written to {full_file_path}")
+        # logging.info(f"{source} written to {full_file_path}")
+        # print(f"{source} written to {full_file_path}")
 
 
 

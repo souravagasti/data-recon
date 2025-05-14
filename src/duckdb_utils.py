@@ -207,6 +207,7 @@ def copy_table_disk(source, file_write_path=None, recon_scenario=None, mapping_d
         if file_write_path is None:
             raise ValueError("file_write_path must be provided.")
 
+        args.mismatches_found = True
         os.makedirs(file_write_path, exist_ok=True)
         full_file_path = os.path.join(file_write_path, 'recon_output.xlsx')
 

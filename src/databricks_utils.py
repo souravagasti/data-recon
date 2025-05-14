@@ -313,7 +313,7 @@ def copy_table_disk(source, file_write_path=None, recon_scenario=None, mapping_d
     """Wrapper that writes a spark df to Excel only if it has rows."""
     count = spark.sql(f"SELECT count(*) as cnt FROM {source}_{session_guid}").collect()[0].cnt
     if count > 0:
-        
+        args.mismatches_found = True
         full_file_path = os.path.join(file_write_path, 'recon_output.xlsx')
 
         write_df_to_excel(source, source, full_file_path)

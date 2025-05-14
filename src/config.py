@@ -16,6 +16,7 @@ class Args:
         self.path_name = ""
         self.run_mode = ""
         self.run_id = ""
+        self.mismatches_found = False
 
 
 args = Args()

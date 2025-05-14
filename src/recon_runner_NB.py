@@ -72,13 +72,23 @@ def run_recon_notebook(platform, source1_settings, source2_settings, recon_type,
 
     mapping_path = os.path.join(path_name, "input", "mapping.csv")
     
-    #archive files
-    archive_input_files(
-    recon.file_write_path,
-    (source1_settings, "settings1.json"),
-    (source2_settings, "settings2.json"),
-    (mapping_path, "mapping.csv")
-)
+    from src.config import args
+
+    if args.mismatches_found:
+        #archive files
+        archive_input_files(
+        recon.file_write_path,
+        (source1_settings, "settings1.json"),
+        (source2_settings, "settings2.json"),
+        (mapping_path, "mapping.csv")
+    )
+        full_file_path = os.path.join(args.path_name,args.run_id)
+        print(f"Mismatches found during reconciliation and logged to {full_file_path}")
+        logging.info("Mismatches found during reconciliation and logged to {full_file_path}")
+
+    else:
+        print("No mismatches found during reconciliation!")
+        logging.info("No mismatches found during reconciliation!")
 
     return recon  # Optional: return for additional inspection/debugging
 
