@@ -363,7 +363,7 @@ def create_column_mismatches_table(info):
                 FROM source1_{session_guid}
                 INNER JOIN source2_{session_guid}
                 ON source1.pk_hash = source2.pk_hash
-                AND source1.non_pk_hash != source2.non_pk_hash
+                AND ISNULL(source1.non_pk_hash,'') != ISNULL(source2.non_pk_hash,'')
             ),
             mismatches_unpivot AS (
                 UNPIVOT mismatches
@@ -470,8 +470,8 @@ def tag_exact_row_matches():
             row_number() OVER (ORDER BY 1) AS running_row_num
         FROM source1_with_rn_{session_guid} source1
         INNER JOIN source2_with_rn_{session_guid} source2
-        ON source1.pk_hash = source2.pk_hash
-        AND source1.non_pk_hash = source2.non_pk_hash
+        ON ISNULL(source1.pk_hash,'') = ISNULL(source2.pk_hash,'')
+        AND ISNULL(source1.non_pk_hash,'') = ISNULL(source2.non_pk_hash,'')
     """)
 
     for source, other_source in [("source1", "source2"), ("source2", "source1")]:
@@ -587,7 +587,7 @@ def run_fuzzy_matching(info):
               ON source1.last_matched_row_num = source2.last_matched_row_num
             WHERE source1.matched = False
               AND source2.matched = False
-              AND source1.non_pk_hash = source2.non_pk_hash --will attempt recon only if non_pk_hashes are same
+              AND ISNULL(source1.non_pk_hash,'') = ISNULL(source2.non_pk_hash,'') --will attempt recon only if non_pk_hashes are same
         )
         WHERE GREATEST(
             ({jws_expr}) / {denominator},
