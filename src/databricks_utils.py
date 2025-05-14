@@ -292,22 +292,22 @@ def write_df_to_excel(source, sheet_name, file_path):
     dbfs_tmp_path = f"dbfs:/tmp/{session_guid}/recon_output.xlsx"
     # Save locally (NOT under /dbfs)
 
-    print("local_tmp_path",local_tmp_path)
-    print("dbfs_tmp_path",dbfs_tmp_path)
+    # print("local_tmp_path",local_tmp_path)
+    # print("dbfs_tmp_path",dbfs_tmp_path)
 
     if os.path.exists(local_tmp_path):
         with pd.ExcelWriter(local_tmp_path, engine='openpyxl', mode='a', if_sheet_exists="replace") as writer:
             df_pd.to_excel(writer, sheet_name=sheet_name[:31], index=False)
-            print("mode append")
+            # print("mode append")
     else:
         with pd.ExcelWriter(local_tmp_path, engine='openpyxl', mode='w') as writer:
             df_pd.to_excel(writer, sheet_name=sheet_name[:31], index=False)
-            print("mode overwrite")
-    print("copied to local")
+            # print("mode overwrite")
+    # print("copied to local")
 
     # Copy to DBFS path
     dbutils.fs.cp(f"file:{local_tmp_path}", dbfs_tmp_path)
-    print("copied to dbfs tmp")
+    # print("copied to dbfs tmp")
 
 def copy_table_disk(source, file_write_path=None, recon_scenario=None, mapping_df=None):
     """Wrapper that writes a spark df to Excel only if it has rows."""

@@ -205,11 +205,15 @@ class Recon:
             "source1", "source2"
         ]:
             copy_table_disk(table, self.file_write_path)
+
+        full_file_path = os.path.join(self.file_write_path, 'recon_output.xlsx')
+
         if args.platform == "databricks":
-            full_file_path = os.path.join(self.file_write_path, 'recon_output.xlsx')
+            #do an extra copy to the recon_output file from temp location
             dbutils.fs.cp(f"dbfs:/tmp/{args.run_id}/recon_output.xlsx", full_file_path)
-            logging.info(f"{source} written to {full_file_path}")
-            print(f"{source} written to {full_file_path}")
+
+        logging.info(f"{source} written to {full_file_path}")
+        print(f"{source} written to {full_file_path}")
 
 
 
