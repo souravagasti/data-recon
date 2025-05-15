@@ -37,7 +37,6 @@ def create_table_from_source(source_type, table_name, settings):
     logging.info(f" Creating table {table_name} from source: {source_type}")
  
     if args.platform == "duckdb_on_databricks":
-        print("invoking create_df_from_source")
        
         from src.databricks_utils import create_df_from_source
         df_spark = create_df_from_source(source_type, table_name, settings)
