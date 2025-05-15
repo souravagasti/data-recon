@@ -61,10 +61,13 @@ class Recon:
         logging.info(f"Performing recon of type: {recon_type}")
         if recon_type == "pk_standard":
             self.write_recon_with_pk_results()
-        elif recon_type == "soft_pk_and_cleanup":
+        if recon_type == "pk_cleansed":
+            self.write_recon_with_cleansed_pk_results()            
+        elif recon_type == "soft_pk_cleansed":
             self.write_recon_with_soft_pk_and_cleanup_results()
-        elif recon_type == "hierarchical_data":
+        elif recon_type == "hierarchical_fuzzy":
             self.write_recon_hierarchical_data_results()
+
         if args.platform == "databricks":
             logging.info("Dropping temporary tables")
             drop_temp_tables(args.run_id)
@@ -91,10 +94,31 @@ class Recon:
         if args.platform == "databricks":
             full_file_path = os.path.join(self.file_write_path, 'recon_output.xlsx')
             dbutils.fs.cp(f"dbfs:/tmp/{args.run_id}/recon_output.xlsx", full_file_path)
-            # logging.info(f"{source} written to {full_file_path}")
-            # print(f"{source} written to {full_file_path}")
 
-            ##put mapping_df in config.py later
+    def write_recon_with_cleansed_pk_results(self):
+        """Performs PK-based recon and exports mismatches to disk."""
+
+        # Step 1: Cleanse string columns of special characters
+        for source in ["source1", "source2"]:
+            cleanse_columns(source, self.info[f"cols_{source}"])
+
+        # Step 2: Generate hashes for PK and non-PK columns
+        for source in ["source1", "source2"]:
+            add_hash_column(source, self.info[f'pk_{source}'], "pk_hash")
+            add_hash_column(source, self.info[f'non_pk_{source}'], "non_pk_hash")
+
+        # Step 3: Find exclusive records between the two tables
+        create_exclusive_diff_tables(self.info)
+
+        # Step 4: Find column-level mismatches for matching PKs with differing values
+        create_column_mismatches_table(self.info)
+
+        # Step 5: Write recon outputs to disk
+        for table in ["source1_minus_source2", "source2_minus_source1", "column_mismatches"]:
+            copy_table_disk(table, self.file_write_path, self.recon_scenario, self.info["mapping_df"])
+        if args.platform == "databricks":
+            full_file_path = os.path.join(self.file_write_path, 'recon_output.xlsx')
+            dbutils.fs.cp(f"dbfs:/tmp/{args.run_id}/recon_output.xlsx", full_file_path)
 
     def write_recon_with_soft_pk_and_cleanup_results(self):
         """Performs recon using soft PK logic and cleanses columns."""
@@ -132,46 +156,6 @@ class Recon:
             
                 # logging.info(f"{source} written to {full_file_path}")
                 # print(f"{source} written to {full_file_path}")
-
-    # def write_recon_soft_pk_fuzzy_data_results(self):
-    #     """Performs recon on data with soft pks using hierarchical fuzzy logic."""
-
-    #     # Step 1: Clean and deduplicate both tables
-    #     for source in ["source1", "source2"]:
-    #         # dedup_table(source, self.info[f'pk_{source}'])
-    #         cleanse_columns(source, self.info[f'pk_{source}'])
-    #         add_hash_column(source, self.info[f'pk_{source}'], "pk_hash")
-    #         if len(self.info[f'non_pk_{source}']) > 0:
-    #             add_hash_column(source, self.info[f'non_pk_{source}'], "non_pk_hash")
-    #         else:
-    #             #add non_pk_hash column so that the fuzzy match function can be called
-    #             # even if there are no non_pk columns
-    #             # in the source table
-    #             add_column(source, "non_pk_hash", "INT",-1)
-
-    #     # Step 2: Generate row numbers for both datasets
-    #     assign_row_numbers(self.info)
-
-    #     # Step 3: Find exact hash matches and tag as 'absolute' matches
-    #     tag_exact_row_matches()
-
-    #     # Step 4: Propagate last matched row number for remaining unmatched rows
-    #     tag_last_matched_row_number()
-
-    #     # Step 5: Generate probable fuzzy matches using Jaro-Winkler & Levenshtein
-    #     run_fuzzy_matching(self.info)
-
-    #     # Step 6: Tag match types and update original datasets
-    #     update_fuzzy_match_types(self.info)
-
-    #     # Step 7: Write output to disk
-    #     for table in [
-    #         "source1_matches", "source2_matches",
-    #         "probable_match",
-    #         "source1_minus_source2", "source2_minus_source1",
-    #         "source1", "source2"
-    #     ]:
-    #         copy_table_disk(table, self.file_write_path)
 
 
     def write_recon_hierarchical_data_results(self):
