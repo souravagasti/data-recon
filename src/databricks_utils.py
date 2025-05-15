@@ -177,6 +177,10 @@ def create_df_from_source(source_type, table_name, settings):
        
         # Read from local file system
         tables = pd.read_html(local_path, header = 1)
+
+        # Coerce all values to string before Spark sees them
+        for i, col in enumerate(tables[0].columns):
+            tables[0][col] = tables[0][col].astype(str)
  
         # Clean column names
         original_cols = tables[0].columns

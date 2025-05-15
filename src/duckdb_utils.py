@@ -122,6 +122,10 @@ def create_table_from_source(source_type, table_name, settings):
             file_path = settings['file_path']
  
             tables = pd.read_html(file_path, header = 1)
+
+            # Coerce all values to string
+            for i, col in enumerate(tables[0].columns):
+                tables[0][col] = tables[0][col].astype(str)
  
             # Clean column names
             original_cols = tables[0].columns
