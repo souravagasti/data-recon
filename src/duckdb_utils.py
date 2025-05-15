@@ -122,11 +122,15 @@ def create_table_from_source(source_type, table_name, settings):
             file_path = settings['file_path']
  
             tables = pd.read_html(file_path, header = 1)
+            table = tables[0]
 
-            # Coerce all values to string
-            for i, col in enumerate(tables[0].columns):
-                tables[0][col] = tables[0][col].astype(str)
- 
+            # Strip rows with all NaNs
+            table.dropna(how="all", inplace=True)
+
+            # Cast selected columns to string (to preserve leading zeroes, avoid float conversion)
+            cols_to_string = table.columns.tolist()
+            table[cols_to_string] = table[cols_to_string].astype(str)
+    
             # Clean column names
             original_cols = tables[0].columns
             cleaned_cols = [regex.sub(r"[^a-zA-Z0-9]", "_", col).strip() for col in original_cols]
