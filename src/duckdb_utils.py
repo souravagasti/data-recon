@@ -135,7 +135,11 @@ def create_table_from_source(source_type, table_name, settings):
             original_cols = tables[0].columns
             cleaned_cols = [regex.sub(r"[^a-zA-Z0-9]", "_", col).strip() for col in original_cols]
    
-            tables[0].columns = cleaned_cols
+            table.columns = cleaned_cols
+
+            # Optional: Strip `.0` or trailing noise added
+            for col in table.columns:
+                table[col] = table[col].astype(str).str.strip().str.replace(r"\.0$", "", regex=True)
  
             duckdb.register(f"{table_name}_df",tables[0])
             duckdb.sql(f"""CREATE OR REPLACE TEMPORARY TABLE {table_name} AS SELECT * FROM {table_name}_df""")

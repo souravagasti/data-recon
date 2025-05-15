@@ -191,6 +191,10 @@ def create_df_from_source(source_type, table_name, settings):
         cleaned_cols = [re.sub(r"[^a-zA-Z0-9]", "_", col).strip() for col in original_cols]
         table.columns = cleaned_cols
  
+        # Optional: Strip `.0` or trailing noise added
+        for col in table.columns:
+            table[col] = table[col].astype(str).str.strip().str.replace(r"\.0$", "", regex=True)
+
         df = spark.createDataFrame(table)
  
     else:
