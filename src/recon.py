@@ -43,7 +43,6 @@ class Recon:
         if recon_type == "pk_standard":
             self.write_recon_with_pk_results()
         if recon_type == "pk_cleansed":
-            print("running pk_cleansed")
             self.write_recon_with_cleansed_pk_results()            
         elif recon_type == "soft_pk_cleansed":
             self.write_recon_with_soft_pk_and_cleanup_results()
@@ -55,7 +54,6 @@ class Recon:
             drop_temp_tables(args.run_id)
         if args.platform in ["databricks", "duckdb_on_databricks"]:
             dbutils.fs.rm("dbfs:/tmp/{args.run_id}", recurse=True)
-            print(f"Cleaned temp dbfs path")
        
         # if args.platform in ["databricks","duckdb_on_databricks"]:            
         #     local_path = f"file:/dbfs/{args.run_id}/recon.log"

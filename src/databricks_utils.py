@@ -343,58 +343,6 @@ def create_column_mismatches_table(info):
     source1_aliased_string = info['source1_prefixed_select_string'].replace(".","_")
     source2_aliased_string = info['source2_prefixed_select_string'].replace(".","_")
  
-    print(rf"""
-    CREATE OR REPLACE TABLE column_mismatches_{session_guid} AS
-    WITH mismatches AS (
-        SELECT
-            {', '.join([f"CAST(source1.{col[8:]} AS STRING) AS {col}" for col in source1_aliased_string.split(',')])},
-            {', '.join([f"CAST(source2.{col[8:]} AS STRING) AS {col}" for col in source2_aliased_string.split(',')])},
-            source1.pk_hash
-        FROM source1_{session_guid} source1
-        INNER JOIN source2_{session_guid} source2
-        ON source1.pk_hash = source2.pk_hash
-        AND COALESCE(source1.non_pk_hash,'') != COALESCE(source2.non_pk_hash,'')
-    ),
-    mismatches_unpivot AS (
-        SELECT
-            col,
-            col_value,
-            pk_hash
-        FROM mismatches
-        UNPIVOT (
-            col_value FOR col IN ({', '.join(source1_aliased_string.split(','))}, {', '.join(source2_aliased_string.split(','))})
-        )
-    ),
-    mismatches_unpivot_source1 AS (
-        SELECT mu.*, cm.col_id
-        FROM mismatches_unpivot mu
-        JOIN col_mapping_{session_guid} cm ON mu.col = cm.col_name
-        WHERE LEFT(col, 8) = 'source1_'
-    ),
-    mismatches_unpivot_source2 AS (
-        SELECT mu.*, cm.col_id
-        FROM mismatches_unpivot mu
-        JOIN col_mapping_{session_guid} cm ON mu.col = cm.col_name
-        WHERE LEFT(col, 8) = 'source2_'
-    ),
-    output AS (
-        SELECT
-            {', '.join(['source1.' + x for x in info['pk_source1']])},
-            mus1.pk_hash,
-            SUBSTRING(mus1.col, 9) AS source1_col_name,
-            mus1.col_value AS source1_col_val,
-            SUBSTRING(mus2.col, 9) AS source2_col_name,
-            mus2.col_value AS source2_col_val
-        FROM mismatches_unpivot_source1 mus1
-        INNER JOIN mismatches_unpivot_source2 mus2
-            ON mus1.pk_hash = mus2.pk_hash
-            AND mus1.col_id = mus2.col_id
-            AND mus1.col_value != mus2.col_value
-        INNER JOIN source1_{session_guid} source1 ON source1.pk_hash = mus1.pk_hash
-    )
-    SELECT * FROM output
-    """)
- 
     spark.sql(rf"""
     CREATE OR REPLACE TABLE column_mismatches_{session_guid} AS
     WITH mismatches AS (
