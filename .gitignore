@@ -4,7 +4,6 @@ excel/
 html/
 .databricks
 run_output/
-templates/
 testing.ipynb
 .venv/
 .vscode/

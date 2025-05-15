@@ -1,0 +1,5 @@
+{
+    "source_type": "local_parquet",
+    "file_path": "/path/to/your/.parquet"
+}
+  
