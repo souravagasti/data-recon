@@ -17,7 +17,7 @@ def main():
     if args_input.platform == "duckdb":
         PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         if PROJECT_ROOT not in sys.path:
-            # print(f"Adding {PROJECT_ROOT} to sys.path")
+            print(f"Adding {PROJECT_ROOT} to sys.path")
             sys.path.insert(0, PROJECT_ROOT)
 
         from src.duckdb_io_utils import setup_logging, load_json_config, archive_input_files
@@ -91,12 +91,14 @@ def main():
         (args_input.source2_settings, "settings2.json"),
         (mapping_path, "mapping.csv"))
 
+        print(f"Recon completed and results written to {recon.file_write_path}")
+        logging.info(f"Recon completed and results written to {recon.file_write_path}") 
+
         # full_file_path = os.path.join(args.path_name,args.run_id)
         # print(f"Mismatches found during reconciliation and logged to {full_file_path}")
         # logging.info(f"Mismatches found during reconciliation and logged to {full_file_path}")
 
     else:
-        print("No mismatches found during reconciliation!")
         logging.info("No mismatches found during reconciliation!")
 
     return recon  # Optional: return for additional inspection/debugging
