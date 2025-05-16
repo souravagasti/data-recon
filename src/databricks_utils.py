@@ -154,6 +154,9 @@ def create_df_from_source(source_type, table_name, settings):
  
         dbutils.fs.cp(file_path, os.path.join("dbfs:","tmp",file_path.split("/")[-1]))
         file = pd.read_excel(os.path.join("/dbfs/tmp",file_path.split("/")[-1]), sheet_name=sheet_name, engine="openpyxl",dtype=str)
+       
+        #clearing nan values from pandas df if any found in pk cols
+        file.dropna(subset = args.info[f"pk_{table_name}"],how = "any", inplace=True)
  
         df = spark.createDataFrame(file)
         for col in df.columns:
@@ -178,10 +181,10 @@ def create_df_from_source(source_type, table_name, settings):
         # Read from local file system
         tables = pd.read_html(local_path, header = 1)
         table = tables[0]
-
-        # Strip rows with all NaNs
-        table.dropna(how="all", inplace=True)
-
+ 
+        #clearing nan values from pandas df if any found in pk cols
+        table.dropna(subset = args.info[f"pk_{table_name}"],how = "any", inplace=True)
+ 
         # Cast selected columns to string (to preserve leading zeroes, avoid float conversion)
         cols_to_string = table.columns.tolist()
         table[cols_to_string] = table[cols_to_string].astype(str)
@@ -194,7 +197,7 @@ def create_df_from_source(source_type, table_name, settings):
         # Optional: Strip `.0` or trailing noise added
         for col in table.columns:
             table[col] = table[col].astype(str).str.strip().str.replace(r"\.0$", "", regex=True)
-
+ 
         df = spark.createDataFrame(table)
  
     else:

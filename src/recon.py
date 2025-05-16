@@ -32,6 +32,7 @@ class Recon:
     def setup(self):
         mapping_path = os.path.join(self.path_name, "input", "mapping.csv")
         self.info = load_mapping_table_and_string_vars(mapping_path)
+        args.info = self.info
         create_table_from_source(self.source_type_1, "source1", self.settings1)
         create_table_from_source(self.source_type_2, "source2", self.settings2)
         # rename_columns("source1", self.info["mapping_df"], "source1",True)

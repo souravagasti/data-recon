@@ -17,6 +17,7 @@ class Args:
         self.run_mode = ""
         self.run_id = ""
         self.mismatches_found = False
+        self.info = ""
 
 
 args = Args()
