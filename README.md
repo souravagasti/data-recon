@@ -56,6 +56,8 @@ For Databricks execution:
 
 ✅ Extend support for additional file types (JSON, Avro)
 
+✅ Add supportfor authentication via temporary credential vending for Unity Catalog-backed data
+
 ## Contact
 For queries, improvements, or collaborations, feel free to reach out:
 📧 sourav.agasti@gmail.com
